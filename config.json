@@ -1,8 +1,0 @@
-{
-  "term": "202601",
-  "use_twilio": false,
-  "poll_seconds": 60,
-  "twilio_sid": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-  "twilio_auth": "your_auth_token_here",
-  "twilio_number": "+18135550000"
-}
