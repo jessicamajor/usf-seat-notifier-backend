@@ -1,23 +1,23 @@
-import json
+from twilio.rest import Client
+import os
 
-with open("config.json") as f:
-    config = json.load(f)
+def send_sms(phone: str, message: str):
+    sid = os.getenv("TWILIO_SID")
+    auth = os.getenv("TWILIO_AUTH")
+    number = os.getenv("TWILIO_NUMBER")
 
-USE_TWILIO = config.get("use_twilio", False)
+    if not sid or not auth or not number:
+        print("Twilio not configured")
+        return {"status": "twilio_not_configured"}
 
-if USE_TWILIO:
-    from twilio.rest import Client
-    TWILIO_SID = config["twilio_sid"]
-    TWILIO_AUTH = config["twilio_auth"]
-    TWILIO_NUMBER = config["twilio_number"]
-    client = Client(TWILIO_SID, TWILIO_AUTH)
-else:
-    TWILIO_NUMBER = None  # not used
-
-def send_sms(phone: str, crn: str, seats: int):
-    message = f"Seats AVAILABLE for CRN {crn}! {seats} seats remaining."
-    if USE_TWILIO:
-        client.messages.create(body=message, from_=TWILIO_NUMBER, to=phone)
-    else:
-        # For testing without Twilio charges
-        print(f"[FAKE SMS] to {phone}: {message}")
+    client = Client(sid, auth)
+    try:
+        client.messages.create(
+            body=message,
+            from_=number,
+            to=phone
+        )
+        return {"status": "sent"}
+    except Exception as e:
+        print("SMS error:", e)
+        return {"status": "error", "details": str(e)}
