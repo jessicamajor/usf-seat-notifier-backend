@@ -17,7 +17,7 @@ app.add_middleware(
 
 # Initialize DB and start background seat monitor when app starts
 init_db()
-start_background_monitor()
+#start_background_monitor()
 
 @app.get("/")
 def root():
