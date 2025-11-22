@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 
 def get_seats(crn: str, term: str) -> int:
     url = f"https://usfonline.admin.usf.edu/pls/prod/bwckschd.p_disp_detail_sched?term_in={term}&crn_in={crn}"
-    r = requests.get(url, timeout=10)
+    r = requests.get(url, timeout=5)
     r.raise_for_status()
 
     soup = BeautifulSoup(r.text, "html.parser")
