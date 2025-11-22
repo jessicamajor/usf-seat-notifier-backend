@@ -1,50 +1,41 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Query, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from sqlmodel import select
-from db import init_db, get_session
-from models import Subscription
-from background import start_background_monitor
+from scraper import get_seats
+from notifier import send_sms
 
-app = FastAPI(title="USF Seat Notifier")
+app = FastAPI(title="USF Seat Notifier API")
 
-@app.get("/")
-def root():
-    return {"message": "USF Seat Notifier API running"}
-
-# Allow calls from anywhere (useful if you later add a frontend)
+# Allow frontend to call the backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],      # allow your Base44 frontend
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Initialize DB and start background seat monitor when app starts
-init_db()
-#start_background_monitor()
+# Health check route (required by Railway)
+@app.get("/")
+def root():
+    return {"message": "USF Seat API running"}
 
-@app.get("/subscriptions")
-def list_subscriptions():
-    with get_session() as session:
-        subs = session.exec(select(Subscription)).all()
-        return subs
+# 1️⃣ Check seats RIGHT NOW
+@app.get("/check")
+def check_seats(
+    crn: str = Query(...),
+    term: str = Query("202601")
+):
+    seats = get_seats(crn, term)
+    return {
+        "crn": crn,
+        "term": term,
+        "seats": seats
+    }
 
-@app.post("/subscribe")
-def subscribe(phone: str, crn: str):
-    with get_session() as session:
-        sub = Subscription(phone=phone, crn=crn)
-        session.add(sub)
-        session.commit()
-        session.refresh(sub)
-        return sub
-
-@app.delete("/unsubscribe/{sub_id}")
-def unsubscribe(sub_id: int):
-    with get_session() as session:
-        sub = session.get(Subscription, sub_id)
-        if not sub:
-            return {"error": "Subscription not found"}
-
-        session.delete(sub)
-        session.commit()
-        return {"status": "unsubscribed"}
+# 2️⃣ Send immediate SMS notification with current seats
+@app.post("/notify")
+def notify(
+    phone: str,
+    crn: str,
+    term: str = "202601"
+):
+    seats = get_seats(crn, term)
