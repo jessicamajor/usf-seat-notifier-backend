@@ -7,11 +7,10 @@ from models import Subscription
 from scraper import get_seats
 from notifier import send_sms
 
-with open("config.json") as f:
-    config = json.load(f)
+import os
 
-TERM = config.get("term", "202601")
-POLL_SECONDS = config.get("poll_seconds", 60)
+TERM = os.getenv("TERM", "202601")
+POLL_SECONDS = int(os.getenv("POLL_SECONDS", "60"))
 
 def monitor_loop():
     while True:
