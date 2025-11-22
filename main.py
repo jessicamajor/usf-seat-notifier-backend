@@ -23,10 +23,6 @@ app.add_middleware(
 init_db()
 #start_background_monitor()
 
-@app.get("/")
-def root():
-    return {"message": "USF Seat Notifier API running"}
-
 @app.get("/subscriptions")
 def list_subscriptions():
     with get_session() as session:
