@@ -7,6 +7,10 @@ from background import start_background_monitor
 
 app = FastAPI(title="USF Seat Notifier")
 
+@app.get("/")
+def root():
+    return {"message": "USF Seat Notifier API running"}
+
 # Allow calls from anywhere (useful if you later add a frontend)
 app.add_middleware(
     CORSMiddleware,
