@@ -1,19 +1,32 @@
 import requests
 from bs4 import BeautifulSoup
 
-def get_seats(crn: str, term: str) -> int:
-    url = f"https://usfonline.admin.usf.edu/pls/prod/bwckschd.p_disp_detail_sched?term_in={term}&crn_in={crn}"
-    r = requests.get(url, timeout=5)
-    r.raise_for_status()
+def get_seats(crn: str, term: str) -> int | None:
+    """
+    Returns the number of remaining seats, or None if scraping fails.
+    """
+    url = (
+        "https://usfonline.admin.usf.edu/pls/prod/"
+        f"bwckschd.p_disp_detail_sched?term_in={term}&crn_in={crn}"
+    )
+
+    try:
+        r = requests.get(url, timeout=5)
+        r.raise_for_status()
+    except Exception as e:
+        print("Error fetching CRN", crn, ":", e)
+        return None
 
     soup = BeautifulSoup(r.text, "html.parser")
 
     seat_text = soup.find(string="Seats Remaining:")
     if not seat_text:
-        return -1  # couldn't find it
+        print("Could not locate seat field for CRN", crn)
+        return None
 
-    seats_str = seat_text.find_next().text.strip()
     try:
+        seats_str = seat_text.find_next().text.strip()
         return int(seats_str)
-    except ValueError:
-        return -1
+    except Exception:
+        print("Seat number parsing failed for CRN", crn)
+        return None
